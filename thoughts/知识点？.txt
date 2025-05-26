@@ -1,0 +1,2 @@
+on_someAction_boolLikeTriggered()这样写槽函数会自动connect
+如果以其他方式命名则要手动绑定槽函数

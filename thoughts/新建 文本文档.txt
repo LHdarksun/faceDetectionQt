@@ -1,0 +1,35 @@
+updateCameraFrame中resizeWindow处要添加异常处理
+
+待完成事项：
+1.三种特定目标特征测量 
+2.区域分割
+3.边缘检测
+4.阈值分割
+5.识别人脸区域
+6.三种人脸编辑:
+	a.手动调整五官位置？
+	b.美颜（去找个算法？）
+	c.
+
+可以在第二页中显示检测出来的人脸并选择打开哪张（QMessageBox？）
+预览？
+
+流程？：
+src->
+预处理->		done	光线补偿、灰度化、直方图均衡化
+区域分割->
+人脸区域识别->
+阈值分割->	done	直方图双峰法、自适应阈值法、迭代阈值法
+边缘提取->	done	Roberts、Sobel、Prewitt、Laplacian
+轮廓跟踪->
+特征提取->
+识别
+
+
+NerF
+Unet
+空洞卷积
+消融实验
+
+
+detectMultiScale() 中的 minNeighbors 具体例子是啥样？
