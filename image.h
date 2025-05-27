@@ -37,11 +37,7 @@ public:
     void setCVimgOrigin(Mat cvimg);
     void setCVimgTemp(Mat cvimg);
     void setFileName(QString fileName);
-    void setScaledWidth(int width);
-    void setScaledHeight(int height);
     //Get
-    int getScaledHeight();
-    int getScaledWidth();
     QImage getQimgOrigin();
     QImage getQimgTemp();
     Mat getCVimgOrigin();

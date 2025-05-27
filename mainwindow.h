@@ -51,9 +51,9 @@ private:
     CascadeClassifier faceCascade, eyeCascade, noseCascade, mouthCascade;
 
     QString imageRootPath;      //图像根目录
-    QString imageProduced;      //经过一系列人脸检测处理后图像的存储路径
-    QString imageFace;          //检测出来的人脸的保存地址
-    QString imageFaceWithOrgans;
+    QString imageProducedPath;      //经过一系列人脸检测处理后图像的存储路径
+    QString imageFacePath;          //检测出来的人脸的保存地址
+    QString imageFaceWithOrgansPath;
     QString xmlEyePath;
     QString xmlFacePath;
     QString xmlMouthPath;
@@ -91,10 +91,8 @@ private:
 
     void produceImg();
 
-    void lightCompensation();
-    void BGR2GrayScale();
-    void histogramEqualization();
-
+    Mat lightCompensation(Mat src);
+    Mat histogramEqualization(Mat src);
     Mat edgeDetection();
     Mat thresholdSegmentation();
     Mat zoneSegmentation();

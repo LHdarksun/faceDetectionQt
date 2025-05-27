@@ -18,19 +18,7 @@ QImage Image::getQimgTemp(){
 QString Image::getFileName(){
     return filename;
 }
-int Image::getScaledWidth(){
-    return scaledWidth;
-}
-int Image::getScaledHeight(){
-    return scaledHeight;
-}
 
-void Image::setScaledWidth(int width){
-    scaledWidth = width;
-}
-void Image::setScaledHeight(int height){
-    scaledHeight = height;
-}
 void Image::setCVimgOrigin(Mat src){
     m_CVimg_Origin = src.clone();
 }

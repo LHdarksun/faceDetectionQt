@@ -24,9 +24,9 @@ MainWindow::MainWindow(QWidget *parent)
     mouthCascade.load(xmlMouthPath.toStdString());
 
     imageRootPath = "../../Images/srcImage";
-    imageProduced = "../../Images/dstImage/ImageAfterProduce";
-    imageFace = "../../Images/faceImage";
-    imageFaceWithOrgans = "../../Images/faceWithOrgansImage";
+    imageProducedPath = "../../Images/dstImage/ImageAfterProduce";
+    imageFacePath = "../../Images/faceImage";
+    imageFaceWithOrgansPath = "../../Images/faceWithOrgansImage";
 
     isImshowInitialized = false;
 
@@ -206,17 +206,12 @@ void MainWindow::ImgShow(Mat src){
         image = Img.getQimgTemp();
         QPixmap pixmap = QPixmap::fromImage(image.scaled(ui->showImg->size(),Qt::KeepAspectRatio));
         ui->showImg->setPixmap(pixmap);
-        //长宽命名逻辑不一样导致的
-        Img.setScaledWidth(image.scaled(ui->showImg->size(),Qt::KeepAspectRatio).width());
-        Img.setScaledHeight(image.scaled(ui->showImg->size(),Qt::KeepAspectRatio).height());
     }
     else {
         Frame.cvtCV2Qimg(src.clone());
         image = Frame.getQimgTemp();
         QPixmap pixmap = QPixmap::fromImage(image.scaled(ui->showImg->size(),Qt::KeepAspectRatio));
         ui->showImg->setPixmap(pixmap);
-        Frame.setScaledWidth(image.scaled(ui->showImg->size(),Qt::KeepAspectRatio).width());
-        Frame.setScaledHeight(image.scaled(ui->showImg->size(),Qt::KeepAspectRatio).height());
     }
 }
 
@@ -395,147 +390,49 @@ void MainWindow::chooseZoneSegmentationType(){
     在ImgShow时调用？
     可以添加直方图的绘制
     基于参考白的光线补偿*/
-void MainWindow::lightCompensation(){
-    Mat src;
+Mat MainWindow::lightCompensation(Mat src){
     int width,height;
-    if (isFrame){
-        src = Frame.getCVimgTemp();
-        width = Frame.getScaledWidth();
-        height = Frame.getScaledHeight();
-    }
-    else {
-        src = Img.getCVimgTemp();
-        width = Img.getScaledWidth();
-        height = Img.getScaledHeight();
-    }
     Mat dst = Mat::zeros(src.size(),src.type());
-    vector<Mat> BGRvalue(3);
-    vector<int> grayList(256,0);
-    int colorB,colorG,colorR,gray;
+    width = src.cols;
+    height = src.rows;
     int pixelCount = 0;
-    int grayNum,grayAverage,graySum;
+    int grayNum = 255;
+    int grayAverage,graySum;
     float lightCoe;
     int pixelNum = width*height;
 
+    int histSize = 256;
+    float range[] = {0,256};
+    const float* histRange = {range};
+    Mat hist;
+    calcHist(&src,1,0,Mat(),hist,1,&histSize,&histRange);
+
     const float thresholdcoe = 0.05;
-    const int thresholdnum = 100;
 
-    if (pixelNum*thresholdcoe < thresholdnum){
-        QMessageBox::critical(this,"图像预处理错误：光线补偿","像素数据过少，无法正常处理，请更换一个更大的图像!");
-        return;
-    }
-
-    split(src,BGRvalue);
-
-    for (int i=0;i<width;i++){
-        for (int j=0;j<height;j++){
-            colorB = BGRvalue[0].at<uchar>(i,j);
-            colorG = BGRvalue[1].at<uchar>(i,j);
-            colorR = BGRvalue[2].at<uchar>(i,j);
-
-            //+500四舍五入
-            gray = (colorB*114+colorG*587+colorR*299+500)/1000;
-            if (gray > 255){
-                gray = 255;
-            }
-            grayList[gray]++;
-        }
-    }
-    //大脑渲染直方图
-    for (int i=0;i<=255;i++){
-        qDebug().noquote() << i << ":" <<grayList[i];
-    }
-
-    //
-    for (int i=0;i<=255;i++){
-        if ((float)pixelCount/pixelNum < thresholdcoe){
-            pixelCount += grayList[255-i];
-            grayNum = 255 - i;
-        }
-        else {
+    //找到灰度阈值
+    for (int i=255;i>=0;--i){
+        pixelCount += static_cast<int>(hist.at<float>(i));
+        if ((float)pixelCount / pixelNum >= thresholdcoe){
+            grayNum = i;
             break;
         }
     }
 
+    //计算高灰度区域灰度平均值
     pixelCount = 0;
     graySum = 0;
-    for (int i=255-grayNum;i<=255;i++){
-        graySum += grayList[i]*i;
-        pixelCount += grayList[i];
+    for (int i=grayNum;i<256;i++){
+        int gray = static_cast<int>(hist.at<float>(i));
+        graySum += gray*i;
+        pixelCount += gray;
     }
     grayAverage = graySum/pixelCount;
 
-    lightCoe = 255.0/(float)grayAverage;
+    lightCoe = 255.0f / grayAverage;
 
-    for (int i=0;i<width;i++){
-        for (int j=0;j<height;j++){
-            //cv::at<uchar>(x,y) 超过255后不会将其截断为255，而是对其进行255模运算
-            //cv::saturate_cast<type>() 会使超过该type最大值的值自动变为该type最大值
-            BGRvalue[0].at<uchar>(i,j) = saturate_cast<uchar>(BGRvalue[0].at<uchar>(i,j)*lightCoe);
-            BGRvalue[1].at<uchar>(i,j) = saturate_cast<uchar>(BGRvalue[1].at<uchar>(i,j)*lightCoe);
-            BGRvalue[2].at<uchar>(i,j) = saturate_cast<uchar>(BGRvalue[2].at<uchar>(i,j)*lightCoe);
-        }
-    }
+    src.convertTo(dst,-1,lightCoe,0);
 
-    merge(BGRvalue,dst);
-
-    if (isFrame){
-        Frame.setCVimgTemp(dst);
-    }
-    else {
-        Img.setCVimgTemp(dst);
-    }
-}
-
-//灰度化
-void MainWindow::BGR2GrayScale(){
-    Mat src;
-    if (isFrame){
-        src = Frame.getCVimgTemp();
-    }
-    else {
-        src = Img.getCVimgTemp();
-    }
-    Mat dst = Mat::zeros(src.size(),CV_8UC1);
-    vector<Mat> BGRvalue(3);
-
-    int height = src.rows;
-    int width = src.cols;
-
-    split(src,BGRvalue);
-    for (int i=0;i<width;i++){
-        for (int j=0;j<height;j++){
-            dst.at<uchar>(i,j) = (BGRvalue[0].at<uchar>(i,j)*114+BGRvalue[1].at<uchar>(i,j)*587+BGRvalue[2].at<uchar>(i,j)*299)/1000;
-        }
-    }
-
-    if (isFrame){
-        Frame.setCVimgTemp(dst);
-    }
-    else {
-        Img.setCVimgTemp(dst);
-    }
-}
-
-//直方图均衡化
-void MainWindow::histogramEqualization(){
-    Mat src,dst;
-    if (isFrame){
-        src = Frame.getCVimgTemp();
-    }
-    else {
-        src = Img.getCVimgTemp();
-    }
-    dst = Mat::zeros(src.size(),src.type());
-
-    equalizeHist(src,dst);
-
-    if (isFrame){
-        Frame.setCVimgTemp(dst);
-    }
-    else {
-        Img.setCVimgTemp(dst);
-    }
+    return dst;
 }
 
 //边缘检测
@@ -762,21 +659,30 @@ Mat MainWindow::zoneSegmentation(){
 
 //对图像执行预处理、边缘提取、图像分割、区域标记、轮廓跟踪和特征提取
 void MainWindow::produceImg(){
+    Mat src = isFrame ? Frame.getCVimgTemp() : Img.getCVimgTemp();
     //图像预处理
-    lightCompensation();
-    BGR2GrayScale();
-    histogramEqualization();
+    Mat afterTrans = Mat::zeros(src.size(),src.type());
+    cvtColor(src,afterTrans,COLOR_BGR2GRAY);
+    qDebug() << "灰度转化完成";
+    Mat afterComp = lightCompensation(afterTrans);
+    qDebug() << "光线平衡完成";
+    Mat afterHist = Mat::zeros(src.size(),src.type());
+    equalizeHist(afterComp,afterHist);
+    qDebug() << "直方图均衡化完成";
+
     if (isFrame){
-        Frame.saveWithCount(Frame.getCVimgTemp(),imageProduced,PRE_PRODUCE);
+        Frame.setCVimgTemp(afterHist);
+        Frame.saveWithCount(Frame.getCVimgTemp(),imageProducedPath,PRE_PRODUCE);
     } else {
-        Img.saveWithCount(Img.getCVimgTemp(),imageProduced,PRE_PRODUCE);
+        Img.setCVimgTemp(afterHist);
+        Img.saveWithCount(Img.getCVimgTemp(),imageProducedPath,PRE_PRODUCE);
     }
     //区域分割
     Mat afZSegmentation = zoneSegmentation();
     if (isFrame){
-        Frame.saveWithCount(afZSegmentation,imageProduced,ZONE_MARK);
+        Frame.saveWithCount(afZSegmentation,imageProducedPath,ZONE_MARK);
     } else {
-        Img.saveWithCount(afZSegmentation,imageProduced,ZONE_MARK);
+        Img.saveWithCount(afZSegmentation,imageProducedPath,ZONE_MARK);
     }
     //人脸识别
     //1.识别人脸
@@ -799,9 +705,9 @@ void MainWindow::produceImg(){
      */
     faceCascade.detectMultiScale(image,faces,1.1,3);
     if (isFrame){
-        Frame.saveWithCount(image,imageFace,FACE_DETECT);
+        Frame.saveWithCount(image,imageFacePath,FACE_DETECT);
     } else {
-        Img.saveWithCount(image,imageFace,FACE_DETECT);
+        Img.saveWithCount(image,imageFacePath,FACE_DETECT);
     }
     for (const Rect& face : faces){
         //绘制人脸框
@@ -833,24 +739,24 @@ void MainWindow::produceImg(){
         }
 
         if (isFrame){
-            Frame.saveWithCount(faceROI,imageFaceWithOrgans,FACE_DETECT);
+            Frame.saveWithCount(faceROI,imageFaceWithOrgansPath,FACE_DETECT);
         } else {
-            Img.saveWithCount(faceROI,imageFaceWithOrgans,FACE_DETECT);
+            Img.saveWithCount(faceROI,imageFaceWithOrgansPath,FACE_DETECT);
         }
     }
     //阈值分割
     Mat afTSegmentation = thresholdSegmentation();
     if (isFrame){
-        Frame.saveWithCount(afTSegmentation,imageProduced,THRE_SEG);
+        Frame.saveWithCount(afTSegmentation,imageProducedPath,THRE_SEG);
     } else {
-        Img.saveWithCount(afTSegmentation,imageProduced,THRE_SEG);
+        Img.saveWithCount(afTSegmentation,imageProducedPath,THRE_SEG);
     }
     //边缘提取
     Mat afDetection = edgeDetection();
     if (isFrame){
-        Frame.saveWithCount(afDetection,imageProduced,EDGE_DETEC);
+        Frame.saveWithCount(afDetection,imageProducedPath,EDGE_DETEC);
     } else {
-        Img.saveWithCount(afDetection,imageProduced,EDGE_DETEC);
+        Img.saveWithCount(afDetection,imageProducedPath,EDGE_DETEC);
     }
 }
 
