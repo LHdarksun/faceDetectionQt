@@ -100,14 +100,14 @@
       <widget class="QPushButton" name="pBtnC_MethodSwitch">
        <property name="geometry">
         <rect>
-         <x>160</x>
+         <x>150</x>
          <y>60</y>
-         <width>80</width>
+         <width>100</width>
          <height>40</height>
         </rect>
        </property>
        <property name="text">
-        <string>转换方法</string>
+        <string>转化为机器学习方法</string>
        </property>
       </widget>
      </widget>
@@ -141,13 +141,13 @@
          <x>0</x>
          <y>0</y>
          <width>248</width>
-         <height>800</height>
+         <height>600</height>
         </rect>
        </property>
        <property name="minimumSize">
         <size>
          <width>0</width>
-         <height>800</height>
+         <height>600</height>
         </size>
        </property>
        <widget class="QGroupBox" name="groupBox">
@@ -476,61 +476,6 @@
           </property>
           <property name="text">
            <string>迭代阈值</string>
-          </property>
-         </widget>
-        </widget>
-       </widget>
-       <widget class="QGroupBox" name="groupBox_4">
-        <property name="geometry">
-         <rect>
-          <x>5</x>
-          <y>580</y>
-          <width>240</width>
-          <height>180</height>
-         </rect>
-        </property>
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-         </font>
-        </property>
-        <property name="title">
-         <string>区域分割算法选择:</string>
-        </property>
-        <widget class="QFrame" name="frame_5">
-         <property name="geometry">
-          <rect>
-           <x>10</x>
-           <y>40</y>
-           <width>220</width>
-           <height>120</height>
-          </rect>
-         </property>
-         <property name="frameShape">
-          <enum>QFrame::Shape::StyledPanel</enum>
-         </property>
-         <property name="frameShadow">
-          <enum>QFrame::Shadow::Raised</enum>
-         </property>
-         <widget class="QRadioButton" name="radBtnZ_ZoneSegmentation_Skin">
-          <property name="geometry">
-           <rect>
-            <x>20</x>
-            <y>20</y>
-            <width>80</width>
-            <height>20</height>
-           </rect>
-          </property>
-          <property name="font">
-           <font>
-            <pointsize>9</pointsize>
-           </font>
-          </property>
-          <property name="text">
-           <string>肤色分割</string>
-          </property>
-          <property name="checked">
-           <bool>true</bool>
           </property>
          </widget>
         </widget>

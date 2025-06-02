@@ -38,24 +38,21 @@ MainWindow::MainWindow(QWidget *parent)
 
     edgeDetectionType = 1;
     thresholdSegmentationType = 1;
-    zoneSegmentationType = 0;
+    traditionalFaceType = 0;
 
     //获取正则表达
     QRegularExpression reF("^actF_.*");
     QRegularExpression reR("^radBtnR_.*");
     QRegularExpression reE("^radBtnE_.*");
     QRegularExpression reT("^radBtnT_.*");
-    QRegularExpression reZ("^radBtnZ_.*");
     actionsF = findChildren<QAction*>(reF);
     radBtnResolution = findChildren<QRadioButton*>(reR);
     radBtnEdgeDetection = findChildren<QRadioButton*>(reE);
     radBtnThresholdSegmentation = findChildren<QRadioButton*>(reT);
-    radBtnZoneSegmentation = findChildren<QRadioButton*>(reZ);
     actsF = actionsF;
     radBtnR = radBtnResolution;
     radBtnE = radBtnEdgeDetection;
     radBtnT = radBtnThresholdSegmentation;
-    radBtnZ = radBtnZoneSegmentation;
 
     disableItemsActF(true);
 
@@ -76,10 +73,6 @@ MainWindow::MainWindow(QWidget *parent)
     //
     for (QRadioButton* rBT : radBtnT){
         connect(rBT,&QRadioButton::clicked,this,&MainWindow::chooseThresholdSegmentationType);
-    }
-    //
-    for (QRadioButton* rBZ : radBtnZ){
-        connect(rBZ,&QRadioButton::clicked,this,&MainWindow::chooseZoneSegmentationType);
     }
 }
 
@@ -383,21 +376,15 @@ void MainWindow::chooseThresholdSegmentationType(){
     qDebug() << thresholdSegmentationType;
 }
 
-//区域分割算法
-void MainWindow::chooseZoneSegmentationType(){
-    if (ui->radBtnZ_ZoneSegmentation_Skin->isChecked()){
-        zoneSegmentationType = 0;
-    }
-    qDebug() << zoneSegmentationType;
-}
-
 void MainWindow::updateFaceDetectionType(){
     if (isMachineLearning){
         isMachineLearning = false;
         ui->pBtnC_MethodSwitch->setText("转化为机器学习方法");
+        qDebug() << "现在是机器学习";
     } else {
         isMachineLearning = true;
         ui->pBtnC_MethodSwitch->setText("转化为传统方法");
+        qDebug() << "现在是传统方法";
     }
 }
 
@@ -407,6 +394,12 @@ void MainWindow::chooseFaceDetectionType(){
         faceDetectionMachineLearning(src);
         qDebug() << "执行机器学习法";
     } else {
+        auto *dlg = new chooseTraditionalDetectionTypeWidget(this);
+        connect(dlg,&chooseTraditionalDetectionTypeWidget::typeSelected,this,[=](int type){
+            traditionalFaceType = type;
+            qDebug() << "传统检测方法：" << type;
+        });
+        dlg->exec();
         faceDetectionTraditional(src);
         qDebug() << "执行传统算法";
     }
@@ -531,11 +524,6 @@ Mat MainWindow::edgeDetection(Mat src){
 //阈值分割
 Mat MainWindow::thresholdSegmentation(Mat src){
     Mat dst;
-    if (isFrame){
-        src = Frame.getCVimgTemp();
-    } else {
-        src = Img.getCVimgTemp();
-    }
 
     //直方图双峰
     if (thresholdSegmentationType==0){
@@ -643,7 +631,6 @@ Mat MainWindow::thresholdSegmentation(Mat src){
     return dst;
 }
 
-//区域分割
 /* erode 腐蚀函数
              * void erode(InputArray src,
              *          OutputArray dst,
@@ -660,62 +647,89 @@ Mat MainWindow::thresholdSegmentation(Mat src){
              *  第六个参数：int类型的borderType，用于推断图像外部像素的某种边界模式，默认值是BORDER_DEFAULT。
              *  第七个参数：const Scalar&类型的borderValue，一般不管它
             */
-Mat MainWindow::zoneSegmentation(Mat src){
-    Mat hsv,dst;
-
-    //肤色分割
-    switch (zoneSegmentationType){
-        case 1: {
-            cvtColor(src,hsv,COLOR_BGR2HSV);
-            //设定肤色范围
-            //inRange(src,bottom,top,dst)
-            inRange(hsv,Scalar(0,48,80),Scalar(20,255,255),dst);
-
-            erode(dst,dst,Mat(),Point(-1,-1),2);
-            //膨胀函数，参数与erode一样
-            dilate(dst,dst,Mat(),Point(-1,-1),2);
-        }
-    }
-    return dst;
-}
-
 void MainWindow::faceDetectionTraditional(Mat src){
-    Mat hsv,mask;
+    Mat gray,hsv,mask,dst;
     src = isFrame ? Frame.getCVimgTemp() : Img.getCVimgTemp();
-    cvtColor(src.clone(),hsv,COLOR_BGR2HSV);
-    inRange(hsv,Scalar(0,48,80),Scalar(20,255,255),mask);
-
-    //腐蚀与膨胀
-    erode(mask,mask,Mat(),Point(-1,-1),2);
-    dilate(mask,mask,Mat(),Point(-1,-1),2);
-
-    isFrame ? Frame.saveWithCount(mask,imageMaskPath,MASK_GET) :
-        Img.saveWithCount(mask,imageMaskPath,MASK_GET);
-    qDebug() << "mask图保存成功";
-
-    Mat afterGaussian;
-    GaussianBlur(src.clone(),afterGaussian,Size(3,3),0);
-    qDebug() << "高斯滤波完成";
-    isFrame ? Frame.saveWithCount(afterGaussian,imageProducedPath,FACE_DETECT) :
-        Img.saveWithCount(afterGaussian,imageProducedPath,FACE_DETECT);
-
     vector<vector<Point>> contours;
-    findContours(mask,contours,RETR_EXTERNAL,CHAIN_APPROX_SIMPLE);
+    if (traditionalFaceType==0) {
+        cvtColor(src.clone(),hsv,COLOR_BGR2HSV);
+        inRange(hsv,Scalar(0,48,80),Scalar(20,255,255),mask);
+
+        //腐蚀与膨胀
+        erode(mask,mask,Mat(),Point(-1,-1),2);
+        dilate(mask,mask,Mat(),Point(-1,-1),2);
+
+        GaussianBlur(src.clone(),dst,Size(3,3),0);
+        qDebug() << "高斯滤波完成";
+        isFrame ? Frame.saveWithCount(dst,imageProducedPath,FACE_DETECT) :
+        Img.saveWithCount(dst,imageProducedPath,FACE_DETECT);
+
+        findContours(mask,contours,RETR_EXTERNAL,CHAIN_APPROX_SIMPLE);
+
+        if (!contours.empty()){
+            //找到最大轮廓
+            int maxIdx = 0;
+            double maxArea = contourArea(contours[0]);
+            for (size_t i=1;i<contours.size();++i){
+                double area = contourArea(contours[i]);
+                if (area > maxArea){
+                    maxArea = area;
+                    maxIdx = i;
+                }
+            }
+            //取最大轮廓的包围盒中心
+            Rect bound = boundingRect(contours[maxIdx]);
+            Point seedPoint = Point(bound.x + bound.width/2, bound.y + bound.height/2);
+
+            Mat regionGrown = Mat::zeros(mask.size(),CV_8UC1);
+            Scalar newVal = Scalar(255);
+            int loDiff = 10, upDiff = 10;
+            int flags = 4 | FLOODFILL_MASK_ONLY | (255 << 8);
+
+            Mat maskForFlood = Mat::zeros(mask.rows + 2, mask.cols + 2, CV_8UC1);
+
+            floodFill(mask,maskForFlood,seedPoint,newVal,0,Scalar(loDiff),Scalar(upDiff),flags);
+
+            regionGrown = maskForFlood(Range(1,mask.rows+1),Range(1,mask.cols+1));
+
+            mask = regionGrown.clone();
+
+            isFrame ? Frame.saveWithCount(mask,imageMaskPath,MASK_GET) :
+                Img.saveWithCount(mask,imageMaskPath,MASK_GET);
+            qDebug() << "mask图保存成功";
+        }
+    } else if (traditionalFaceType==1) {
+        cvtColor(src,gray,COLOR_BGR2GRAY);
+
+        gray = lightCompensation(gray);
+        qDebug() << "光线平衡完成";
+
+        Mat threshImg = thresholdSegmentation(gray);
+        qDebug() << "阈值分割完成";
+
+        Mat edgeImg = edgeDetection(threshImg);
+        qDebug() << "边缘检测完成";
+
+        isFrame ? Frame.saveWithCount(edgeImg,imageProducedPath,PRE_PRODUCE) :
+            Img.saveWithCount(edgeImg,imageProducedPath,PRE_PRODUCE);
+
+        findContours(edgeImg,contours,RETR_EXTERNAL,CHAIN_APPROX_SIMPLE);
+    }
     for (const auto& contour : contours){
         //用找到的边缘去形成矩阵
         Rect bound = boundingRect(contour);
         //人脸宽高比,一般为0.75~1.3
         float aspectRatio = (float)bound.width / bound.height;
         if (bound.area() > 900 && aspectRatio > 0.75 && aspectRatio < 1.3){
-            rectangle(afterGaussian,bound,Scalar(0,255,0),2);
+            rectangle(src,bound,Scalar(0,255,0),2);
         }
 
-        Mat faceROI = afterGaussian(bound).clone();
+        Mat faceROI = src(bound).clone();
         isFrame ? Frame.saveWithCount(faceROI,imageFaceROIPath,FACE_DETECT) :
             Img.saveWithCount(faceROI,imageFaceROIPath,FACE_DETECT);
     }
-    isFrame ? Frame.saveWithCount(afterGaussian,imageFacePath,FACE_DETECT) :
-        Img.saveWithCount(afterGaussian,imageFacePath,FACE_DETECT);
+    isFrame ? Frame.saveWithCount(src,imageFacePath,FACE_DETECT) :
+        Img.saveWithCount(src,imageFacePath,FACE_DETECT);
 }
 
 void MainWindow::faceDetectionMachineLearning(Mat src){
@@ -741,4 +755,222 @@ void MainWindow::faceDetectionMachineLearning(Mat src){
     }
     isFrame ? Frame.saveWithCount(src,imageFacePath,FACE_DETECT) :
               Img.saveWithCount(src,imageFacePath,FACE_DETECT);
+}
+
+void MainWindow::on_pBtn_ChooseROI_clicked(){
+    QString formatFilter = "图片文件(*.bmp *.jpg *.png *.jpeg);;"
+                           "BMP文件(*.bmp);;JPG文件(*.jpg);;PNG文件(*.png);;JPEG文件(*.jpeg)";
+    QString fileName = QFileDialog::getOpenFileName(this,"选择打开的文件",imageFaceROIPath,formatFilter);
+    if (fileName.isEmpty()){
+        QMessageBox::critical(this,"加载错误","文件读取失败，文件为空！");
+        qDebug() << "Open fault! Empty file!";
+        return;
+    }
+    faceDetect.setFileName(fileName);
+    Mat rawImg = imread(fileName.toStdString(),IMREAD_UNCHANGED);
+    if (rawImg.empty()){
+        QMessageBox::critical(this,"加载错误","图像加载失败，图像为空");
+        qDebug() << "Open fault! Empty image";
+        return;
+    }
+    faceDetect.setCVimgOrigin(rawImg);
+    ImgShow(faceDetect.getCVimgOrigin());
+    ui->statusbar->showMessage(faceDetect.getFileName());
+}
+
+void MainWindow::on_pBtn_FindOrgans_clicked(){
+    Mat faceROI = faceDetect.getCVimgOrigin();
+    vector<Rect> eyes;
+    eyeCascade.detectMultiScale(faceROI, eyes, 1.1, 2);
+    for (const Rect& eye : eyes){
+        //tl() -> Top-Left -> 返回矩阵 的 左上角顶点 在 原图像中的坐标
+        //br() -> Bottom-Right -> 返回矩阵 的 右下角顶点 在 原图像中的坐标
+        rectangle(faceROI, eye.tl(), eye.br(), Scalar(255,0,0), 2);
+    }
+
+    //3.识别鼻子
+    vector<Rect> noses;
+    noseCascade.detectMultiScale(faceROI, noses, 1.1, 2);
+    for (const Rect& nose : noses){
+        rectangle(faceROI, nose.tl(), nose.br(), Scalar(0,0,255), 2);
+    }
+
+    //4.识别嘴巴
+    vector<Rect> mouths;
+    mouthCascade.detectMultiScale(faceROI, mouths, 1.1, 2);
+    for (const Rect& mouth : mouths){
+        rectangle(faceROI, mouth.tl(), mouth.br(), Scalar(255,0,255), 2);
+    }
+
+    if (isFrame){
+        Frame.saveWithCount(faceROI,imageFaceWithOrgansPath,FACE_DETECT);
+    } else {
+        Img.saveWithCount(faceROI,imageFaceWithOrgansPath,FACE_DETECT);
+    }
+
+    faceDetect.cvtCV2Qimg(faceROI);
+    faceDetect.setCVimgTemp(faceROI);
+
+    QLabel* label = new QLabel;
+    label->setPixmap(QPixmap::fromImage(faceDetect.getQimgTemp()));
+    label->setWindowTitle("显示五官");
+    label->resize(faceDetect.getQimgTemp().width(),faceDetect.getQimgTemp().height());
+    label->show();
+}
+
+Mat MainWindow::colorQuantization(Mat src, int k) {
+    Mat data;
+    src.convertTo(data, CV_32F);
+    data = data.reshape(1, data.total());
+    Mat labels, centers;
+    kmeans(data, k, labels,
+           TermCriteria(TermCriteria::MAX_ITER | TermCriteria::EPS, 10, 1.0),
+           3, KMEANS_PP_CENTERS, centers);
+    centers = centers.reshape(3, centers.rows);
+    Mat newImg(data.size(), data.type());
+    for (int i = 0; i < data.rows; i++) {
+        newImg.at<float>(i, 0) = centers.at<float>(labels.at<int>(i), 0);
+        newImg.at<float>(i, 1) = centers.at<float>(labels.at<int>(i), 1);
+        newImg.at<float>(i, 2) = centers.at<float>(labels.at<int>(i), 2);
+    }
+    newImg = newImg.reshape(3, src.rows);
+    newImg.convertTo(newImg, CV_8U);
+    return newImg;
+}
+
+// 简单漫画风格化
+Mat MainWindow::Cartoonify(Mat src) {
+    Mat img, gray, edges, color, cartoon;
+    // 1. 双边滤波，保边去噪
+    bilateralFilter(src, img, 9, 75, 75);
+    // 2. 灰度并高斯模糊
+    cvtColor(img, gray, COLOR_BGR2GRAY);
+    medianBlur(gray, gray, 7);
+    // 3. 边缘检测（自适应阈值）
+    adaptiveThreshold(gray, edges, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY, 9, 2);
+    // 4. 色彩量化
+    color = colorQuantization(img, 8);
+    // 5. 合成漫画效果（与边缘融合）
+    cvtColor(edges, edges, COLOR_GRAY2BGR);
+    cartoon = color & edges;
+    return cartoon;
+}
+
+void MainWindow::on_pBtn_CartoonType_clicked(){
+    Mat src = faceDetect.getCVimgOrigin();
+    Mat cartoon = Cartoonify(src);
+
+    faceDetect.cvtCV2Qimg(cartoon);
+    faceDetect.setCVimgTemp(cartoon);
+
+    faceDetect.saveWithCount(cartoon,imageFaceWithOrgansPath,FACE_DETECT);
+
+    QLabel* label = new QLabel;
+    label->setPixmap(QPixmap::fromImage(faceDetect.getQimgTemp()));
+    label->setWindowTitle("漫画化");
+    label->resize(faceDetect.getQimgTemp().width(),faceDetect.getQimgTemp().height());
+    label->show();
+}
+
+void MainWindow::on_pBtn_FunhouseType_clicked(){
+    Mat src = faceDetect.getCVimgOrigin();
+    Mat dst = Mat::zeros(src.size(), src.type());
+
+    int rows = src.rows;
+    int cols = src.cols;
+
+    // 构建映射表
+    Mat map_x = Mat::zeros(src.size(), CV_32FC1);
+    Mat map_y = Mat::zeros(src.size(), CV_32FC1);
+
+    for (int y = 0; y < rows; y++) {
+        for (int x = 0; x < cols; x++) {
+            // 示例1：水平方向正弦形变
+            float offset_x = 30.0f * sin(2 * CV_PI * y / 180);
+            float new_x = x + offset_x;
+
+            // 示例2：垂直方向镜面变形（可选）
+            // float offset_y = 30.0f * cos(2 * CV_PI * x / 180);
+            // float new_y = y + offset_y;
+
+            // 确保坐标在有效范围内
+            map_x.at<float>(y, x) = std::min(std::max(new_x, 0.0f), static_cast<float>(cols - 1));
+            map_y.at<float>(y, x) = static_cast<float>(y);
+        }
+    }
+
+    remap(src, dst, map_x, map_y, INTER_LINEAR, BORDER_REPLICATE);
+
+    faceDetect.cvtCV2Qimg(dst);
+    faceDetect.setCVimgTemp(dst);
+
+    faceDetect.saveWithCount(dst,imageFaceWithOrgansPath,FACE_DETECT);
+
+    QLabel* label = new QLabel;
+    label->setPixmap(QPixmap::fromImage(faceDetect.getQimgTemp()));
+    label->setWindowTitle("哈哈镜");
+    label->resize(faceDetect.getQimgTemp().width(),faceDetect.getQimgTemp().height());
+    label->show();
+}
+
+Mat MainWindow::AddPatternBorder(Mat src, Mat pattern, int borderWidth) {
+    int rows = src.rows + borderWidth * 2;
+    int cols = src.cols + borderWidth * 2;
+
+    // 1. 创建比原图更大的画布
+    Mat dst(rows, cols, src.type());
+
+    // 2. 复制原图到画布中心
+    src.copyTo(dst(Rect(borderWidth, borderWidth, src.cols, src.rows)));
+
+    // 3. 调整花纹图片尺寸
+    Mat patternResize;
+    cv::resize(pattern, patternResize, Size(borderWidth, borderWidth));
+
+    // 4. 贴四角
+    patternResize.copyTo(dst(Rect(0, 0, borderWidth, borderWidth)));                                 // 左上
+    patternResize.copyTo(dst(Rect(cols - borderWidth, 0, borderWidth, borderWidth)));               // 右上
+    patternResize.copyTo(dst(Rect(0, rows - borderWidth, borderWidth, borderWidth)));               // 左下
+    patternResize.copyTo(dst(Rect(cols - borderWidth, rows - borderWidth, borderWidth, borderWidth))); // 右下
+
+    // 5. 贴四边
+    for (int x = borderWidth; x < cols - borderWidth; x += borderWidth) {
+        patternResize.copyTo(dst(Rect(x, 0, borderWidth, borderWidth))); // 顶部
+        patternResize.copyTo(dst(Rect(x, rows - borderWidth, borderWidth, borderWidth))); // 底部
+    }
+    for (int y = borderWidth; y < rows - borderWidth; y += borderWidth) {
+        patternResize.copyTo(dst(Rect(0, y, borderWidth, borderWidth))); // 左侧
+        patternResize.copyTo(dst(Rect(cols - borderWidth, y, borderWidth, borderWidth))); // 右侧
+    }
+
+    return dst;
+}
+
+Mat MainWindow::GenerateCheckerPattern(int size, int blockSize, Scalar color1, Scalar color2) {
+    Mat pattern(size, size, CV_8UC3, color1);
+    for (int y = 0; y < size; y += blockSize) {
+        for (int x = 0; x < size; x += blockSize) {
+            if (((x / blockSize) + (y / blockSize)) % 2 == 0)
+                rectangle(pattern, Rect(x, y, blockSize, blockSize), color2, FILLED);
+        }
+    }
+    return pattern;
+}
+
+void MainWindow::on_pBtn_AddEdge_clicked(){
+    Mat src = faceDetect.getCVimgOrigin();
+
+    Mat checkerPattern = GenerateCheckerPattern(40,9,Scalar(0),Scalar(255));
+    Mat withBorder = AddPatternBorder(src,checkerPattern,40);
+
+    faceDetect.cvtCV2Qimg(withBorder);
+    faceDetect.setCVimgTemp(withBorder);
+
+    faceDetect.saveWithCount(withBorder,imageFaceWithOrgansPath,FACE_DETECT);
+
+    QLabel* label = new QLabel;
+    label->setPixmap(QPixmap::fromImage(faceDetect.getQimgTemp()));
+    label->setWindowTitle("棋盘边框");
+    label->resize(faceDetect.getQimgTemp().width(),faceDetect.getQimgTemp().height());
+    label->show();
 }

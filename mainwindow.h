@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <opencv2/opencv.hpp>
 #include "image.h"
+#include "chooseTraditionalDetectionTypeWidget.h"
 
 using namespace std;
 using namespace cv;
@@ -40,13 +41,14 @@ private:
 
     int edgeDetectionType;      //边缘检测的算法种类
     int thresholdSegmentationType;   //阈值分割的算法种类
-    int zoneSegmentationType;        //区域标记的算法种类
+    int traditionalFaceType;    //传统人脸检测算法种类
 
     bool isFrame;               //判断是否为帧
     bool isImshowInitialized;   //判断摄像头窗口是否初始化成功
     bool isMachineLearning;     //判断人脸识别方法
     Image Img;                  //打开图像对象
     Image Frame;                //截取帧图像对象
+    Image faceDetect;
     VideoCapture capture;       //摄像机对象
 
     CascadeClassifier faceCascade, eyeCascade, noseCascade, mouthCascade;
@@ -72,8 +74,6 @@ private:
     QList<QRadioButton*> radBtnE;               //防止radBtnEdgeDetection被拆散
     QList<QRadioButton*> radBtnThresholdSegmentation;     //指向图像分割算法按钮
     QList<QRadioButton*> radBtnT;               //防止radBtnZoneMarking被拆散
-    QList<QRadioButton*> radBtnZoneSegmentation;
-    QList<QRadioButton*> radBtnZ;
     QMessageBox *msgBoxInfo001; //倒计时提示弹窗对象
     QTimer *cameraTimer;        //刷新摄像头视频帧的计时器
     QTimer *countDownTimer;     //倒计时计时器
@@ -91,7 +91,6 @@ private:
     void chooseResolutionRatioType();
     void chooseEdgeDetectionType();
     void chooseThresholdSegmentationType();
-    void chooseZoneSegmentationType();
     //new
     void chooseFaceDetectionType();
 
@@ -99,12 +98,16 @@ private:
     Mat histogramEqualization(Mat src);
     Mat edgeDetection(Mat src);
     Mat thresholdSegmentation(Mat src);
-    Mat zoneSegmentation(Mat src);
     //new
     void faceDetectionMachineLearning(Mat src);
     void faceDetectionTraditional(Mat src);
 
     QString getHaarPath(const QString &fileName);
+
+    Mat colorQuantization(Mat src, int k);
+    Mat Cartoonify(Mat src);
+    Mat AddPatternBorder(Mat src,Mat pattern, int borderWidth);
+    Mat GenerateCheckerPattern(int size,int blockSize,Scalar color1,Scalar color2);
 
 private slots:
     //帮助向导等文档
@@ -120,5 +123,12 @@ private slots:
     //人脸识别
     void on_pBtnC_ConductDetection_clicked();
     void on_pBtnC_MethodSwitch_clicked();
+
+    void on_pBtn_ChooseROI_clicked();
+
+    void on_pBtn_FindOrgans_clicked();
+    void on_pBtn_CartoonType_clicked();
+    void on_pBtn_FunhouseType_clicked();
+    void on_pBtn_AddEdge_clicked();
 };
 #endif // MAINWINDOW_H

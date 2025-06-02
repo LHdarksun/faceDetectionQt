@@ -64,9 +64,6 @@ public:
     QRadioButton *radBtnI_ImageSplit_DoubleHill;
     QRadioButton *radBtnI_ImageSplit_AdaptiveThreshold;
     QRadioButton *radBtnI_ImageSplit_Iteration;
-    QGroupBox *groupBox_4;
-    QFrame *frame_5;
-    QRadioButton *radBtnZ_ZoneSegmentation_Skin;
     QWidget *funcProduce;
     QFrame *frame_6;
     QLabel *label;
@@ -122,7 +119,7 @@ public:
         pBtnC_ConductDetection->setGeometry(QRect(20, 70, 100, 20));
         pBtnC_MethodSwitch = new QPushButton(frame);
         pBtnC_MethodSwitch->setObjectName("pBtnC_MethodSwitch");
-        pBtnC_MethodSwitch->setGeometry(QRect(160, 60, 80, 40));
+        pBtnC_MethodSwitch->setGeometry(QRect(150, 60, 100, 40));
         sArea_CameraCapture = new QScrollArea(funcCamera);
         sArea_CameraCapture->setObjectName("sArea_CameraCapture");
         sArea_CameraCapture->setGeometry(QRect(20, 150, 260, 300));
@@ -131,8 +128,8 @@ public:
         sArea_CameraCapture->setWidgetResizable(true);
         scrollAreaWidgetContents = new QWidget();
         scrollAreaWidgetContents->setObjectName("scrollAreaWidgetContents");
-        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 248, 800));
-        scrollAreaWidgetContents->setMinimumSize(QSize(0, 800));
+        scrollAreaWidgetContents->setGeometry(QRect(0, 0, 248, 600));
+        scrollAreaWidgetContents->setMinimumSize(QSize(0, 600));
         groupBox = new QGroupBox(scrollAreaWidgetContents);
         groupBox->setObjectName("groupBox");
         groupBox->setGeometry(QRect(5, 10, 240, 180));
@@ -216,20 +213,6 @@ public:
         radBtnI_ImageSplit_Iteration->setObjectName("radBtnI_ImageSplit_Iteration");
         radBtnI_ImageSplit_Iteration->setGeometry(QRect(10, 80, 80, 20));
         radBtnI_ImageSplit_Iteration->setFont(font1);
-        groupBox_4 = new QGroupBox(scrollAreaWidgetContents);
-        groupBox_4->setObjectName("groupBox_4");
-        groupBox_4->setGeometry(QRect(5, 580, 240, 180));
-        groupBox_4->setFont(font);
-        frame_5 = new QFrame(groupBox_4);
-        frame_5->setObjectName("frame_5");
-        frame_5->setGeometry(QRect(10, 40, 220, 120));
-        frame_5->setFrameShape(QFrame::Shape::StyledPanel);
-        frame_5->setFrameShadow(QFrame::Shadow::Raised);
-        radBtnZ_ZoneSegmentation_Skin = new QRadioButton(frame_5);
-        radBtnZ_ZoneSegmentation_Skin->setObjectName("radBtnZ_ZoneSegmentation_Skin");
-        radBtnZ_ZoneSegmentation_Skin->setGeometry(QRect(20, 20, 80, 20));
-        radBtnZ_ZoneSegmentation_Skin->setFont(font1);
-        radBtnZ_ZoneSegmentation_Skin->setChecked(true);
         sArea_CameraCapture->setWidget(scrollAreaWidgetContents);
         chooseFuncWidget->addTab(funcCamera, QString());
         funcProduce = new QWidget();
@@ -286,7 +269,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        chooseFuncWidget->setCurrentIndex(1);
+        chooseFuncWidget->setCurrentIndex(0);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -304,7 +287,7 @@ public:
         pBtnC_CameraSwitch->setText(QCoreApplication::translate("MainWindow", "\346\211\223\345\274\200\346\221\204\345\203\217\345\244\264", nullptr));
         pBtnC_CaptureFrame->setText(QCoreApplication::translate("MainWindow", "\346\215\225\350\216\267\345\270\247", nullptr));
         pBtnC_ConductDetection->setText(QCoreApplication::translate("MainWindow", "\346\211\247\350\241\214\344\272\272\350\204\270\346\243\200\346\265\213", nullptr));
-        pBtnC_MethodSwitch->setText(QCoreApplication::translate("MainWindow", "\350\275\254\346\215\242\346\226\271\346\263\225", nullptr));
+        pBtnC_MethodSwitch->setText(QCoreApplication::translate("MainWindow", "\350\275\254\345\214\226\344\270\272\346\234\272\345\231\250\345\255\246\344\271\240\346\226\271\346\263\225", nullptr));
         groupBox->setTitle(QCoreApplication::translate("MainWindow", "\350\260\203\346\225\264\346\221\204\345\203\217\345\244\264\347\252\227\345\217\243\345\210\206\350\276\250\347\216\207\357\274\232", nullptr));
         radBtnR_ResolutionRatio1280x720->setText(QCoreApplication::translate("MainWindow", "1280x720", nullptr));
         radBtnR_ResolutionRatio1440x810->setText(QCoreApplication::translate("MainWindow", "1440x810", nullptr));
@@ -320,8 +303,6 @@ public:
         radBtnI_ImageSplit_DoubleHill->setText(QCoreApplication::translate("MainWindow", "\347\233\264\346\226\271\345\233\276\345\217\214\345\263\260", nullptr));
         radBtnI_ImageSplit_AdaptiveThreshold->setText(QCoreApplication::translate("MainWindow", "\350\207\252\351\200\202\345\272\224\351\230\210\345\200\274", nullptr));
         radBtnI_ImageSplit_Iteration->setText(QCoreApplication::translate("MainWindow", "\350\277\255\344\273\243\351\230\210\345\200\274", nullptr));
-        groupBox_4->setTitle(QCoreApplication::translate("MainWindow", "\345\214\272\345\237\237\345\210\206\345\211\262\347\256\227\346\263\225\351\200\211\346\213\251:", nullptr));
-        radBtnZ_ZoneSegmentation_Skin->setText(QCoreApplication::translate("MainWindow", "\350\202\244\350\211\262\345\210\206\345\211\262", nullptr));
         chooseFuncWidget->setTabText(chooseFuncWidget->indexOf(funcCamera), QCoreApplication::translate("MainWindow", "\345\237\272\344\272\216\346\221\204\345\203\217\345\244\264\347\232\204\350\257\206\345\210\253", nullptr));
         label->setText(QCoreApplication::translate("MainWindow", "\350\257\267\351\200\211\346\213\251\344\270\200\344\270\252ROI\345\233\276\345\203\217\345\271\266\350\277\233\350\241\214\345\244\204\347\220\206\357\274\201", nullptr));
         pBtn_ChooseROI->setText(QCoreApplication::translate("MainWindow", "\351\200\211\346\213\251ROI\345\233\276\345\203\217", nullptr));
