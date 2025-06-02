@@ -91,6 +91,14 @@ void Image::saveWithCount(Mat src,QString& saveDirPath,int Object){
         nameFilters << "imageZone_*.png";
         nameHead = "imageZone_";
     }
+    else if (Object == FACE_DETECT){
+        nameFilters << "imageFace_*.png";
+        nameHead = "imageFace_";
+    }
+    else if (Object == MASK_GET){
+        nameFilters << "imageMask_*.png";
+        nameHead = "imageMask_";
+    }
     //entryInfoList()：QDir 类的成员函数，用于获取目录中的条目（文件或子目录）的详细信息
     QFileInfoList files = saveDir.entryInfoList(nameFilters,QDir::Files);
     QFileInfoList filesToSave = files;
@@ -118,35 +126,42 @@ void Image::saveWithCount(Mat src,QString& saveDirPath,int Object){
     //防御性编程，防止程序其他部分已经创建了序号更大的图像而导致可能的覆盖
     if (Object==PRE_PRODUCE){
         do {
-            fileName = QString("imagePreP_%1.jpg").arg(nextNum,4,10,QChar('0'));
+            fileName = QString("imagePreP_%1.png").arg(nextNum,4,10,QChar('0'));
             filePath = saveDir.filePath(fileName);
             nextNum++;
         }while (QFileInfo::exists(filePath));       //若已存在则继续生成
     }
     else if (Object==EDGE_DETEC){
         do {
-            fileName = QString("imageEdge_%1.jpg").arg(nextNum,4,10,QChar('0'));
+            fileName = QString("imageEdge_%1.png").arg(nextNum,4,10,QChar('0'));
             filePath = saveDir.filePath(fileName);
             nextNum++;
         }while (QFileInfo::exists(filePath));       //若已存在则继续生成
     }
     else if (Object==THRE_SEG){
         do {
-            fileName = QString("imageThre_%1.jpg").arg(nextNum,4,10,QChar('0'));
+            fileName = QString("imageThre_%1.png").arg(nextNum,4,10,QChar('0'));
             filePath = saveDir.filePath(fileName);
             nextNum++;
         }while (QFileInfo::exists(filePath));       //若已存在则继续生成
     }
     else if (Object==ZONE_MARK){
         do {
-            fileName = QString("imageZone_%1.jpg").arg(nextNum,4,10,QChar('0'));
+            fileName = QString("imageZone_%1.png").arg(nextNum,4,10,QChar('0'));
             filePath = saveDir.filePath(fileName);
             nextNum++;
         }while (QFileInfo::exists(filePath));       //若已存在则继续生成
     }
     else if (Object==FACE_DETECT){
         do {
-            fileName = QString("imageFace_%1.jpg").arg(nextNum,4,10,QChar('0'));
+            fileName = QString("imageFace_%1.png").arg(nextNum,4,10,QChar('0'));
+            filePath = saveDir.filePath(fileName);
+            nextNum++;
+        }while (QFileInfo::exists(filePath));
+    }
+    else if (Object==MASK_GET){
+        do{
+            fileName = QString("mask_%1.png").arg(nextNum,4,10,QChar('0'));
             filePath = saveDir.filePath(fileName);
             nextNum++;
         }while (QFileInfo::exists(filePath));

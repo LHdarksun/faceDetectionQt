@@ -67,9 +67,15 @@ public:
     QGroupBox *groupBox_4;
     QFrame *frame_5;
     QRadioButton *radBtnZ_ZoneSegmentation_Skin;
-    QWidget *tab_2;
+    QWidget *funcProduce;
     QFrame *frame_6;
-    QLabel *label_ShowFaceCount;
+    QLabel *label;
+    QPushButton *pBtn_ChooseROI;
+    QGroupBox *groupBox_5;
+    QPushButton *pBtn_FindOrgans;
+    QPushButton *pBtn_CartoonType;
+    QPushButton *pBtn_FunhouseType;
+    QPushButton *pBtn_AddEdge;
     QMenuBar *menubar;
     QMenu *File;
     QMenu *Help;
@@ -226,17 +232,36 @@ public:
         radBtnZ_ZoneSegmentation_Skin->setChecked(true);
         sArea_CameraCapture->setWidget(scrollAreaWidgetContents);
         chooseFuncWidget->addTab(funcCamera, QString());
-        tab_2 = new QWidget();
-        tab_2->setObjectName("tab_2");
-        frame_6 = new QFrame(tab_2);
+        funcProduce = new QWidget();
+        funcProduce->setObjectName("funcProduce");
+        frame_6 = new QFrame(funcProduce);
         frame_6->setObjectName("frame_6");
         frame_6->setGeometry(QRect(10, 10, 280, 120));
         frame_6->setFrameShape(QFrame::Shape::StyledPanel);
         frame_6->setFrameShadow(QFrame::Shadow::Raised);
-        label_ShowFaceCount = new QLabel(frame_6);
-        label_ShowFaceCount->setObjectName("label_ShowFaceCount");
-        label_ShowFaceCount->setGeometry(QRect(20, 54, 240, 12));
-        chooseFuncWidget->addTab(tab_2, QString());
+        label = new QLabel(frame_6);
+        label->setObjectName("label");
+        label->setGeometry(QRect(20, 10, 240, 25));
+        label->setFont(font);
+        pBtn_ChooseROI = new QPushButton(frame_6);
+        pBtn_ChooseROI->setObjectName("pBtn_ChooseROI");
+        pBtn_ChooseROI->setGeometry(QRect(100, 50, 80, 18));
+        groupBox_5 = new QGroupBox(funcProduce);
+        groupBox_5->setObjectName("groupBox_5");
+        groupBox_5->setGeometry(QRect(10, 160, 280, 140));
+        pBtn_FindOrgans = new QPushButton(groupBox_5);
+        pBtn_FindOrgans->setObjectName("pBtn_FindOrgans");
+        pBtn_FindOrgans->setGeometry(QRect(100, 20, 80, 18));
+        pBtn_CartoonType = new QPushButton(groupBox_5);
+        pBtn_CartoonType->setObjectName("pBtn_CartoonType");
+        pBtn_CartoonType->setGeometry(QRect(100, 50, 80, 18));
+        pBtn_FunhouseType = new QPushButton(groupBox_5);
+        pBtn_FunhouseType->setObjectName("pBtn_FunhouseType");
+        pBtn_FunhouseType->setGeometry(QRect(100, 80, 80, 18));
+        pBtn_AddEdge = new QPushButton(groupBox_5);
+        pBtn_AddEdge->setObjectName("pBtn_AddEdge");
+        pBtn_AddEdge->setGeometry(QRect(100, 110, 80, 18));
+        chooseFuncWidget->addTab(funcProduce, QString());
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName("menubar");
@@ -261,7 +286,7 @@ public:
 
         retranslateUi(MainWindow);
 
-        chooseFuncWidget->setCurrentIndex(0);
+        chooseFuncWidget->setCurrentIndex(1);
 
 
         QMetaObject::connectSlotsByName(MainWindow);
@@ -298,8 +323,14 @@ public:
         groupBox_4->setTitle(QCoreApplication::translate("MainWindow", "\345\214\272\345\237\237\345\210\206\345\211\262\347\256\227\346\263\225\351\200\211\346\213\251:", nullptr));
         radBtnZ_ZoneSegmentation_Skin->setText(QCoreApplication::translate("MainWindow", "\350\202\244\350\211\262\345\210\206\345\211\262", nullptr));
         chooseFuncWidget->setTabText(chooseFuncWidget->indexOf(funcCamera), QCoreApplication::translate("MainWindow", "\345\237\272\344\272\216\346\221\204\345\203\217\345\244\264\347\232\204\350\257\206\345\210\253", nullptr));
-        label_ShowFaceCount->setText(QCoreApplication::translate("MainWindow", "\350\257\267\350\277\233\350\241\214\344\272\272\350\204\270\346\243\200\346\265\213\357\274\201", nullptr));
-        chooseFuncWidget->setTabText(chooseFuncWidget->indexOf(tab_2), QCoreApplication::translate("MainWindow", "Tab 2", nullptr));
+        label->setText(QCoreApplication::translate("MainWindow", "\350\257\267\351\200\211\346\213\251\344\270\200\344\270\252ROI\345\233\276\345\203\217\345\271\266\350\277\233\350\241\214\345\244\204\347\220\206\357\274\201", nullptr));
+        pBtn_ChooseROI->setText(QCoreApplication::translate("MainWindow", "\351\200\211\346\213\251ROI\345\233\276\345\203\217", nullptr));
+        groupBox_5->setTitle(QCoreApplication::translate("MainWindow", "\345\233\276\345\203\217\345\244\204\347\220\206", nullptr));
+        pBtn_FindOrgans->setText(QCoreApplication::translate("MainWindow", "\346\243\200\346\265\213\344\272\224\345\256\230", nullptr));
+        pBtn_CartoonType->setText(QCoreApplication::translate("MainWindow", "\346\274\253\347\224\273\351\243\216\345\244\204\347\220\206", nullptr));
+        pBtn_FunhouseType->setText(QCoreApplication::translate("MainWindow", "\345\223\210\345\223\210\351\225\234\345\244\204\347\220\206", nullptr));
+        pBtn_AddEdge->setText(QCoreApplication::translate("MainWindow", "\345\212\240\350\276\271\346\241\206\345\244\204\347\220\206", nullptr));
+        chooseFuncWidget->setTabText(chooseFuncWidget->indexOf(funcProduce), QCoreApplication::translate("MainWindow", "\345\257\271\344\272\272\350\204\270\345\214\272\345\237\237\350\277\233\350\241\214\345\244\204\347\220\206", nullptr));
         File->setTitle(QCoreApplication::translate("MainWindow", "\346\226\207\344\273\266", nullptr));
         Help->setTitle(QCoreApplication::translate("MainWindow", "\345\270\256\345\212\251", nullptr));
     } // retranslateUi

@@ -14,6 +14,7 @@
 #define THRE_SEG 2
 #define ZONE_MARK 3
 #define FACE_DETECT 4
+#define MASK_GET 5
 
 using namespace cv;
 

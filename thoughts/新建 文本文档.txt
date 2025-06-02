@@ -35,3 +35,43 @@ Unet
 detectMultiScale() 中的 minNeighbors 具体例子是啥样？
 
 深度学习从分类开始？
+
+五官识别部分代码：
+ 
+        //2.识别眼睛
+        vector<Rect> eyes;
+        eyeCascade.detectMultiScale(faceROI, eyes, 1.1, 2);
+        for (const Rect& eye : eyes){
+            //tl() -> Top-Left -> 返回矩阵 的 左上角顶点 在 原图像中的坐标
+            //br() -> Bottom-Right -> 返回矩阵 的 右下角顶点 在 原图像中的坐标
+            rectangle(faceROI, face.tl()+eye.tl(), face.tl()+eye.br(), Scalar(255,0,0), 2);
+        }
+        
+        //3.识别鼻子
+        vector<Rect> noses;
+        noseCascade.detectMultiScale(faceROI, noses, 1.1, 2);
+        for (const Rect& nose : noses){
+            rectangle(faceROI, face.tl()+nose.tl(), face.tl()+nose.br(), Scalar(0,0,255), 2);
+        }
+        
+        //4.识别嘴巴
+        vector<Rect> mouths;
+        mouthCascade.detectMultiScale(faceROI, mouths, 1.1, 2);
+        for (const Rect& mouth : mouths){
+            rectangle(faceROI, face.tl()+mouth.tl(), face.tl()+mouth.br(), Scalar(255,0,255), 2);
+        }
+        
+        if (isFrame){
+            Frame.saveWithCount(faceROI,imageFaceWithOrgansPath,FACE_DETECT);
+        } else {
+            Img.saveWithCount(faceROI,imageFaceWithOrgansPath,FACE_DETECT);
+        }
+    }
+    
+    haarCascade是基于机器学习的方法
+    
+获取mask图按钮逻辑(初始传统法)：
+mask按钮(白)---按下mask按钮--->获取mask图---按下人脸检测--->获取人脸ROI
+---转化为机器学习--->mask按钮(灰)---转化为传统法按钮--->mask按钮(白)
+
+问题：ROI区域不对，分割逻辑？

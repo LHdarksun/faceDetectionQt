@@ -538,9 +538,9 @@
       </widget>
      </widget>
     </widget>
-    <widget class="QWidget" name="tab_2">
+    <widget class="QWidget" name="funcProduce">
      <attribute name="title">
-      <string>Tab 2</string>
+      <string>对人脸区域进行处理</string>
      </attribute>
      <widget class="QFrame" name="frame_6">
       <property name="geometry">
@@ -557,17 +557,100 @@
       <property name="frameShadow">
        <enum>QFrame::Shadow::Raised</enum>
       </property>
-      <widget class="QLabel" name="label_ShowFaceCount">
+      <widget class="QLabel" name="label">
        <property name="geometry">
         <rect>
          <x>20</x>
-         <y>54</y>
+         <y>10</y>
          <width>240</width>
-         <height>12</height>
+         <height>25</height>
+        </rect>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>请选择一个ROI图像并进行处理！</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pBtn_ChooseROI">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>50</y>
+         <width>80</width>
+         <height>18</height>
         </rect>
        </property>
        <property name="text">
-        <string>请进行人脸检测！</string>
+        <string>选择ROI图像</string>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_5">
+      <property name="geometry">
+       <rect>
+        <x>10</x>
+        <y>160</y>
+        <width>280</width>
+        <height>140</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>图像处理</string>
+      </property>
+      <widget class="QPushButton" name="pBtn_FindOrgans">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>20</y>
+         <width>80</width>
+         <height>18</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>检测五官</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pBtn_CartoonType">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>50</y>
+         <width>80</width>
+         <height>18</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>漫画风处理</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pBtn_FunhouseType">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>80</y>
+         <width>80</width>
+         <height>18</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>哈哈镜处理</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pBtn_AddEdge">
+       <property name="geometry">
+        <rect>
+         <x>100</x>
+         <y>110</y>
+         <width>80</width>
+         <height>18</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>加边框处理</string>
        </property>
       </widget>
      </widget>

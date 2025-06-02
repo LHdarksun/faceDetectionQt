@@ -44,6 +44,7 @@ private:
 
     bool isFrame;               //判断是否为帧
     bool isImshowInitialized;   //判断摄像头窗口是否初始化成功
+    bool isMachineLearning;     //判断人脸识别方法
     Image Img;                  //打开图像对象
     Image Frame;                //截取帧图像对象
     VideoCapture capture;       //摄像机对象
@@ -54,6 +55,8 @@ private:
     QString imageProducedPath;      //经过一系列人脸检测处理后图像的存储路径
     QString imageFacePath;          //检测出来的人脸的保存地址
     QString imageFaceWithOrgansPath;
+    QString imageFaceROIPath;
+    QString imageMaskPath;
     QString xmlEyePath;
     QString xmlFacePath;
     QString xmlMouthPath;
@@ -83,19 +86,23 @@ private:
     void updateCameraButton();
     void updateCountDown();
     void showCameraPop();
+    void updateFaceDetectionType();
 
     void chooseResolutionRatioType();
     void chooseEdgeDetectionType();
     void chooseThresholdSegmentationType();
     void chooseZoneSegmentationType();
-
-    void produceImg();
+    //new
+    void chooseFaceDetectionType();
 
     Mat lightCompensation(Mat src);
     Mat histogramEqualization(Mat src);
-    Mat edgeDetection();
-    Mat thresholdSegmentation();
-    Mat zoneSegmentation();
+    Mat edgeDetection(Mat src);
+    Mat thresholdSegmentation(Mat src);
+    Mat zoneSegmentation(Mat src);
+    //new
+    void faceDetectionMachineLearning(Mat src);
+    void faceDetectionTraditional(Mat src);
 
     QString getHaarPath(const QString &fileName);
 
@@ -110,6 +117,8 @@ private slots:
     //摄像头
     void on_pBtnC_CameraSwitch_clicked();
     void on_pBtnC_CaptureFrame_clicked();
+    //人脸识别
     void on_pBtnC_ConductDetection_clicked();
+    void on_pBtnC_MethodSwitch_clicked();
 };
 #endif // MAINWINDOW_H

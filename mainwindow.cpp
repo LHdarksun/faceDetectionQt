@@ -27,8 +27,11 @@ MainWindow::MainWindow(QWidget *parent)
     imageProducedPath = "../../Images/dstImage/ImageAfterProduce";
     imageFacePath = "../../Images/faceImage";
     imageFaceWithOrgansPath = "../../Images/faceWithOrgansImage";
+    imageFaceROIPath = "../../Images/faceROI";
+    imageMaskPath = "../../Images/faceMask";
 
     isImshowInitialized = false;
+    isMachineLearning = false;
 
     ImgShowWindowLength = 1280;
     ImgShowWindowWidth = 720;
@@ -319,7 +322,9 @@ void MainWindow::on_pBtnC_CaptureFrame_clicked(){
 
 //
 void MainWindow::on_pBtnC_ConductDetection_clicked(){
-    produceImg();
+    chooseFaceDetectionType();
+    ui->chooseFuncWidget->setCurrentWidget(ui->funcProduce);
+    QMessageBox::information(this,"成功","人脸ROI保存成功，请在当前界面选择人脸ROI并处理");
 }
 
 //选择摄像头窗口分辨率
@@ -386,6 +391,31 @@ void MainWindow::chooseZoneSegmentationType(){
     qDebug() << zoneSegmentationType;
 }
 
+void MainWindow::updateFaceDetectionType(){
+    if (isMachineLearning){
+        isMachineLearning = false;
+        ui->pBtnC_MethodSwitch->setText("转化为机器学习方法");
+    } else {
+        isMachineLearning = true;
+        ui->pBtnC_MethodSwitch->setText("转化为传统方法");
+    }
+}
+
+void MainWindow::chooseFaceDetectionType(){
+    Mat src = isFrame ? Frame.getCVimgTemp() : Img.getCVimgTemp();
+    if (isMachineLearning){
+        faceDetectionMachineLearning(src);
+        qDebug() << "执行机器学习法";
+    } else {
+        faceDetectionTraditional(src);
+        qDebug() << "执行传统算法";
+    }
+}
+
+void MainWindow::on_pBtnC_MethodSwitch_clicked(){
+    updateFaceDetectionType();
+}
+
 /*  图像预处理,或许该放进image头文件中？那么要修改QMessageBox弹窗逻辑
     在ImgShow时调用？
     可以添加直方图的绘制
@@ -437,74 +467,70 @@ Mat MainWindow::lightCompensation(Mat src){
 
 //边缘检测
 //也许可以添加一个Canny算法
-Mat MainWindow::edgeDetection(){
-    Mat src,dst;
-    if (isFrame){
-        src = Frame.getCVimgTemp();
-    }
-    else {
-        src = Img.getCVimgTemp();
-    }
+Mat MainWindow::edgeDetection(Mat src){
+    Mat dst;
 
-    if (edgeDetectionType==0){
-        Mat RobertsX,RobertsY;
-        //设计卷积核
-        Mat kernelX = (Mat_<float>(2,2) << 0, 1, -1, 0);
-        Mat kernelY = (Mat_<float>(2,2) << 1, 0, 0, -1);
-        //卷积操作
-        //此处设计8U，可能出现问题？
-        filter2D(src,RobertsX,CV_8U,kernelX);
-        filter2D(src,RobertsY,CV_8U,kernelY);
-        //对矩阵各个值求绝对值
-        convertScaleAbs(RobertsX,RobertsX);
-        convertScaleAbs(RobertsY,RobertsY);
-        //合并
-        addWeighted(RobertsX,0.5,RobertsY,0.5,0,dst);
-    }
-    else if (edgeDetectionType==1){
-        Mat SobelX,SobelY;
-        //设计卷积核
-        Mat kernelX = (Mat_<float>(3,3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
-        Mat kernelY = (Mat_<float>(3,3) << -1, -2, -1, 0, 0, 0, 1, 2, 1);
-        //卷积操作
-        //此处设计8U，可能出现问题？
-        filter2D(src,SobelX,CV_8U,kernelX);
-        filter2D(src,SobelY,CV_8U,kernelY);
-        //对矩阵各个值求绝对值
-        convertScaleAbs(SobelX,SobelX);
-        convertScaleAbs(SobelY,SobelY);
-        //合并
-        addWeighted(SobelX,0.5,SobelY,0.5,0,dst);
-    }
-    else if (edgeDetectionType==2){
-        Mat PrewittX,PrewittY;
-        //设计卷积核
-        Mat kernelX = (Mat_<float>(3,3) << -1, 0, 1, -1, 0, 1, -1, 0, 1);
-        Mat kernelY = (Mat_<float>(3,3) << -1, -1, -1, 0, 0, 0, 1, 1, 1);
-        //卷积操作
-        //此处设计8U，可能出现问题？
-        filter2D(src,PrewittX,CV_8U,kernelX);
-        filter2D(src,PrewittY,CV_8U,kernelY);
-        //对矩阵各个值求绝对值
-        convertScaleAbs(PrewittX,PrewittX);
-        convertScaleAbs(PrewittY,PrewittY);
-        //合并
-        addWeighted(PrewittX,0.5,PrewittY,0.5,0,dst);
-    }
-    else if (edgeDetectionType==3){
-        Mat laplacian;
-        //拉普拉斯二阶导
-        Laplacian(src,dst,CV_8U,3);
-        //对矩阵各个值求绝对值
-        convertScaleAbs(dst,dst);
+    switch (edgeDetectionType){
+        case 0: {
+            Mat RobertsX,RobertsY;
+            //设计卷积核
+            Mat kernelX = (Mat_<float>(2,2) << 0, 1, -1, 0);
+            Mat kernelY = (Mat_<float>(2,2) << 1, 0, 0, -1);
+            //卷积操作
+            //此处设计8U，可能出现问题？
+            filter2D(src,RobertsX,CV_8U,kernelX);
+            filter2D(src,RobertsY,CV_8U,kernelY);
+            //对矩阵各个值求绝对值
+            convertScaleAbs(RobertsX,RobertsX);
+            convertScaleAbs(RobertsY,RobertsY);
+            //合并
+            addWeighted(RobertsX,0.5,RobertsY,0.5,0,dst);
+        }
+        case 1: {
+            Mat SobelX,SobelY;
+            //设计卷积核
+            Mat kernelX = (Mat_<float>(3,3) << -1, 0, 1, -2, 0, 2, -1, 0, 1);
+            Mat kernelY = (Mat_<float>(3,3) << -1, -2, -1, 0, 0, 0, 1, 2, 1);
+            //卷积操作
+            //此处设计8U，可能出现问题？
+            filter2D(src,SobelX,CV_8U,kernelX);
+            filter2D(src,SobelY,CV_8U,kernelY);
+            //对矩阵各个值求绝对值
+            convertScaleAbs(SobelX,SobelX);
+            convertScaleAbs(SobelY,SobelY);
+            //合并
+            addWeighted(SobelX,0.5,SobelY,0.5,0,dst);
+        }
+        case 2: {
+            Mat PrewittX,PrewittY;
+            //设计卷积核
+            Mat kernelX = (Mat_<float>(3,3) << -1, 0, 1, -1, 0, 1, -1, 0, 1);
+            Mat kernelY = (Mat_<float>(3,3) << -1, -1, -1, 0, 0, 0, 1, 1, 1);
+            //卷积操作
+            //此处设计8U，可能出现问题？
+            filter2D(src,PrewittX,CV_8U,kernelX);
+            filter2D(src,PrewittY,CV_8U,kernelY);
+            //对矩阵各个值求绝对值
+            convertScaleAbs(PrewittX,PrewittX);
+            convertScaleAbs(PrewittY,PrewittY);
+            //合并
+            addWeighted(PrewittX,0.5,PrewittY,0.5,0,dst);
+        }
+        case 3: {
+            Mat laplacian;
+            //拉普拉斯二阶导
+            Laplacian(src,dst,CV_8U,3);
+            //对矩阵各个值求绝对值
+            convertScaleAbs(dst,dst);
+        }
     }
 
     return dst;
 }
 
 //阈值分割
-Mat MainWindow::thresholdSegmentation(){
-    Mat src,dst;
+Mat MainWindow::thresholdSegmentation(Mat src){
+    Mat dst;
     if (isFrame){
         src = Frame.getCVimgTemp();
     } else {
@@ -618,81 +644,82 @@ Mat MainWindow::thresholdSegmentation(){
 }
 
 //区域分割
-Mat MainWindow::zoneSegmentation(){
-    Mat src,hsv,dst;
-    if (isFrame){
-        src = Frame.getCVimgTemp();
-    } else {
-        src = Img.getCVimgTemp();
-    }
+/* erode 腐蚀函数
+             * void erode(InputArray src,
+             *          OutputArray dst,
+             *          InputArray kernel,
+             *          Point anchor=Point(-1, -1),
+             *          int iterations=1,
+             *          int borderType=BORDER_CONSTANT,
+             *          const Scalar& borderValue=morphologyDefaultBorderValue());
+             *  第一个参数：InputArray类型的src，输入图像，Mat类的对象即可。图像的通道数可以是任意的，但是图像的深度应该是CV_8U，CV_16U，CV_16S，CV_32F，CV_64F之一。
+             *  第二个参数：OutputArray类型的dst，目标图像，需要和输入图像有一样的尺寸和类型。
+             *  第三个参数：InputArray类型的kernel，腐蚀操作的核。当为NULL时，表示的是使用的是参考点位于中心3*3的核。
+             *  第四个参数：Point类型的anchor，锚点的位置，默认值是 (-1, -1)，表示位于中心。
+             *  第五个参数：int类型的iterations，迭代的次数，默认值是1。
+             *  第六个参数：int类型的borderType，用于推断图像外部像素的某种边界模式，默认值是BORDER_DEFAULT。
+             *  第七个参数：const Scalar&类型的borderValue，一般不管它
+            */
+Mat MainWindow::zoneSegmentation(Mat src){
+    Mat hsv,dst;
 
     //肤色分割
-    if (zoneSegmentationType==0){
-        cvtColor(src,hsv,COLOR_BGR2HSV);
-        //设定肤色范围
-        //inRange(src,bottom,top,dst)
-        inRange(hsv,Scalar(0,48,80),Scalar(20,255,255),dst);
-        /* erode 腐蚀函数
-         * void erode(InputArray src,
-         *          OutputArray dst,
-         *          InputArray kernel,
-         *          Point anchor=Point(-1, -1),
-         *          int iterations=1,
-         *          int borderType=BORDER_CONSTANT,
-         *          const Scalar& borderValue=morphologyDefaultBorderValue());
-         *  第一个参数：InputArray类型的src，输入图像，Mat类的对象即可。图像的通道数可以是任意的，但是图像的深度应该是CV_8U，CV_16U，CV_16S，CV_32F，CV_64F之一。
-         *  第二个参数：OutputArray类型的dst，目标图像，需要和输入图像有一样的尺寸和类型。
-         *  第三个参数：InputArray类型的kernel，腐蚀操作的核。当为NULL时，表示的是使用的是参考点位于中心3*3的核。
-         *  第四个参数：Point类型的anchor，锚点的位置，默认值是 (-1, -1)，表示位于中心。
-         *  第五个参数：int类型的iterations，迭代的次数，默认值是1。
-         *  第六个参数：int类型的borderType，用于推断图像外部像素的某种边界模式，默认值是BORDER_DEFAULT。
-         *  第七个参数：const Scalar&类型的borderValue，一般不管它
-         */
-        erode(dst,dst,Mat(),Point(-1,-1),2);
-        //膨胀函数，参数与erode一样
-        dilate(dst,dst,Mat(),Point(-1,-1),2);
-    }
+    switch (zoneSegmentationType){
+        case 1: {
+            cvtColor(src,hsv,COLOR_BGR2HSV);
+            //设定肤色范围
+            //inRange(src,bottom,top,dst)
+            inRange(hsv,Scalar(0,48,80),Scalar(20,255,255),dst);
 
+            erode(dst,dst,Mat(),Point(-1,-1),2);
+            //膨胀函数，参数与erode一样
+            dilate(dst,dst,Mat(),Point(-1,-1),2);
+        }
+    }
     return dst;
 }
 
+void MainWindow::faceDetectionTraditional(Mat src){
+    Mat hsv,mask;
+    src = isFrame ? Frame.getCVimgTemp() : Img.getCVimgTemp();
+    cvtColor(src.clone(),hsv,COLOR_BGR2HSV);
+    inRange(hsv,Scalar(0,48,80),Scalar(20,255,255),mask);
 
-//对图像执行预处理、边缘提取、图像分割、区域标记、轮廓跟踪和特征提取
-void MainWindow::produceImg(){
-    Mat src = isFrame ? Frame.getCVimgTemp() : Img.getCVimgTemp();
-    //图像预处理
-    Mat afterTrans = Mat::zeros(src.size(),src.type());
-    cvtColor(src,afterTrans,COLOR_BGR2GRAY);
-    qDebug() << "灰度转化完成";
-    Mat afterComp = lightCompensation(afterTrans);
-    qDebug() << "光线平衡完成";
-    Mat afterHist = Mat::zeros(src.size(),src.type());
-    equalizeHist(afterComp,afterHist);
-    qDebug() << "直方图均衡化完成";
+    //腐蚀与膨胀
+    erode(mask,mask,Mat(),Point(-1,-1),2);
+    dilate(mask,mask,Mat(),Point(-1,-1),2);
 
-    if (isFrame){
-        Frame.setCVimgTemp(afterHist);
-        Frame.saveWithCount(Frame.getCVimgTemp(),imageProducedPath,PRE_PRODUCE);
-    } else {
-        Img.setCVimgTemp(afterHist);
-        Img.saveWithCount(Img.getCVimgTemp(),imageProducedPath,PRE_PRODUCE);
+    isFrame ? Frame.saveWithCount(mask,imageMaskPath,MASK_GET) :
+        Img.saveWithCount(mask,imageMaskPath,MASK_GET);
+    qDebug() << "mask图保存成功";
+
+    Mat afterGaussian;
+    GaussianBlur(src.clone(),afterGaussian,Size(3,3),0);
+    qDebug() << "高斯滤波完成";
+    isFrame ? Frame.saveWithCount(afterGaussian,imageProducedPath,FACE_DETECT) :
+        Img.saveWithCount(afterGaussian,imageProducedPath,FACE_DETECT);
+
+    vector<vector<Point>> contours;
+    findContours(mask,contours,RETR_EXTERNAL,CHAIN_APPROX_SIMPLE);
+    for (const auto& contour : contours){
+        //用找到的边缘去形成矩阵
+        Rect bound = boundingRect(contour);
+        //人脸宽高比,一般为0.75~1.3
+        float aspectRatio = (float)bound.width / bound.height;
+        if (bound.area() > 900 && aspectRatio > 0.75 && aspectRatio < 1.3){
+            rectangle(afterGaussian,bound,Scalar(0,255,0),2);
+        }
+
+        Mat faceROI = afterGaussian(bound).clone();
+        isFrame ? Frame.saveWithCount(faceROI,imageFaceROIPath,FACE_DETECT) :
+            Img.saveWithCount(faceROI,imageFaceROIPath,FACE_DETECT);
     }
-    //区域分割
-    Mat afZSegmentation = zoneSegmentation();
-    if (isFrame){
-        Frame.saveWithCount(afZSegmentation,imageProducedPath,ZONE_MARK);
-    } else {
-        Img.saveWithCount(afZSegmentation,imageProducedPath,ZONE_MARK);
-    }
-    //人脸识别
-    //1.识别人脸
+    isFrame ? Frame.saveWithCount(afterGaussian,imageFacePath,FACE_DETECT) :
+        Img.saveWithCount(afterGaussian,imageFacePath,FACE_DETECT);
+}
+
+void MainWindow::faceDetectionMachineLearning(Mat src){
     vector<Rect> faces;
-    Mat image;
-    if (isFrame){
-        image = Frame.getCVimgTemp();
-    } else {
-        image = Img.getCVimgTemp();
-    }
     /*  void CascadeClassifier::detectMultiScale(
      *      InputArray image,                  // 输入图像（灰度图）
      *      std::vector<Rect>& objects,        // 输出检测到的目标矩形
@@ -703,60 +730,15 @@ void MainWindow::produceImg(){
      *      Size maxSize = Size()              // 目标最大尺寸（过滤过大目标）
      *  );
      */
-    faceCascade.detectMultiScale(image,faces,1.1,3);
-    if (isFrame){
-        Frame.saveWithCount(image,imageFacePath,FACE_DETECT);
-    } else {
-        Img.saveWithCount(image,imageFacePath,FACE_DETECT);
-    }
+    faceCascade.detectMultiScale(src,faces,1.1,3);
     for (const Rect& face : faces){
         //绘制人脸框
-        rectangle(image,face,Scalar(0,255,0),2);
-        //人脸区域内检测五官
-        Mat faceROI = image(face);
-
-        //2.识别眼睛
-        vector<Rect> eyes;
-        eyeCascade.detectMultiScale(faceROI, eyes, 1.1, 2);
-        for (const Rect& eye : eyes){
-            //tl() -> Top-Left -> 返回矩阵 的 左上角顶点 在 原图像中的坐标
-            //br() -> Bottom-Right -> 返回矩阵 的 右下角顶点 在 原图像中的坐标
-            rectangle(faceROI, face.tl()+eye.tl(), face.tl()+eye.br(), Scalar(255,0,0), 2);
-        }
-
-        //3.识别鼻子
-        vector<Rect> noses;
-        noseCascade.detectMultiScale(faceROI, noses, 1.1, 2);
-        for (const Rect& nose : noses){
-            rectangle(faceROI, face.tl()+nose.tl(), face.tl()+nose.br(), Scalar(0,0,255), 2);
-        }
-
-        //4.识别嘴巴
-        vector<Rect> mouths;
-        mouthCascade.detectMultiScale(faceROI, mouths, 1.1, 2);
-        for (const Rect& mouth : mouths){
-            rectangle(faceROI, face.tl()+mouth.tl(), face.tl()+mouth.br(), Scalar(255,0,255), 2);
-        }
-
-        if (isFrame){
-            Frame.saveWithCount(faceROI,imageFaceWithOrgansPath,FACE_DETECT);
-        } else {
-            Img.saveWithCount(faceROI,imageFaceWithOrgansPath,FACE_DETECT);
-        }
+        rectangle(src,face,Scalar(0,255,0),2);
+        //将人脸框部分存储为一个Mat类型图像
+        Mat faceROI = src(face).clone();
+        isFrame ? Frame.saveWithCount(faceROI,imageFaceROIPath,FACE_DETECT) :
+                  Img.saveWithCount(faceROI,imageFaceROIPath,FACE_DETECT);
     }
-    //阈值分割
-    Mat afTSegmentation = thresholdSegmentation();
-    if (isFrame){
-        Frame.saveWithCount(afTSegmentation,imageProducedPath,THRE_SEG);
-    } else {
-        Img.saveWithCount(afTSegmentation,imageProducedPath,THRE_SEG);
-    }
-    //边缘提取
-    Mat afDetection = edgeDetection();
-    if (isFrame){
-        Frame.saveWithCount(afDetection,imageProducedPath,EDGE_DETEC);
-    } else {
-        Img.saveWithCount(afDetection,imageProducedPath,EDGE_DETEC);
-    }
+    isFrame ? Frame.saveWithCount(src,imageFacePath,FACE_DETECT) :
+              Img.saveWithCount(src,imageFacePath,FACE_DETECT);
 }
-
